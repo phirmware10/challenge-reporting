@@ -1,7 +1,7 @@
 const knex = require('./db')
-const https = require('https')
-const jsonStream = require('JSONStream')
-const { Transform } = require('stream')
+const Student = require('./model/student')
+const fetchgradeScript = require('./scripts/student-grades')
+const { findStudentsGradeFile } = require('./services/student-grades')
 
 module.exports = {
   getHealth,
@@ -9,6 +9,8 @@ module.exports = {
   getStudentGradesReport,
   getCourseGradesReport
 }
+
+fetchgradeScript()
 
 async function getHealth (req, res, next) {
   try {
@@ -23,7 +25,9 @@ async function getHealth (req, res, next) {
 async function getStudent (req, res, next) {
   try {
     const { id } = req.params
-    const [student] = await knex('students').where('id', id)
+    const student = await Student.findStudent(Number(id))
+
+    if (!student) return res.status(404).json({ message: `Student with id ${id} not found` })
     res.json(student)
   } catch (error) {
     console.error(error)
@@ -31,62 +35,17 @@ async function getStudent (req, res, next) {
   }
 }
 
-async function getStudentGradesReport (req, response, next) {
+async function getStudentGradesReport (req, res, next) {
   const studentId = req.params.id
-  const url = 'https://outlier-coding-test-data.netlify.app/grades.json'
-  const studentGrade = []
+  const student = await Student.findStudent(studentId)
 
-  const [student] = await knex('students').where('id', studentId)
-  https.get(url, (res) => {
-    res.pipe(jsonStream.parse('*'))
-      .pipe(new Transform({
-        objectMode: true,
-        transform (chunck, enc, cb) {
-          if (chunck.id !== Number(studentId)) return cb()
-          studentGrade.push(chunck)
-          cb()
-        }
-      }))
-      .on('finish', () => {
-        student.grades = studentGrade
-        response.json(student)
-      })
-      .on('error', (err) => {
-        console.error(err)
-        res.status(500).json({ message: 'Something went wrong' })
-      })
-  })
+  const studentGradeFile = await findStudentsGradeFile(Number(studentId))
+  const grades = require(`./grades/${studentGradeFile}`)
+  student.grades = grades.filter(grade => grade.id === Number(studentId))
+  res.json(student)
 }
 
 async function getCourseGradesReport (req, res, next) {
-  const coursetrack = []
-  const courseStats = {}
-  const url = 'https://outlier-coding-test-data.netlify.app/grades.json'
-  https.get(url, (res) => {
-    res.pipe(jsonStream.parse('*'))
-      .pipe(new Transform({
-        objectMode: true,
-        transform (chunck, enc, cb) {
-          if (!coursetrack.includes(chunck.course)) coursetrack.push(chunck.course)
-          const currentStats = courseStats[chunck.course]
-          const obj = {
-            lowestgrade: chunck.grade,
-            highestGrade: chunck.grade,
-            count: currentStats.count++,
-            total: currentStats.total + chunck.grade
-          }
-          obj.average = obj.total / obj.count
-          courseStats[chunck.course] = obj
-          cb()
-        }
-      }))
-      .on('finish', () => {
-        student.grades = studentGrade
-        response.json(student)
-      })
-      .on('error', (err) => {
-        console.error(err)
-        res.status(500).json({ message: 'Something went wrong' })
-      })
-  })
+  const stats = require('./grades/stats.json')
+  res.json(stats)
 }
