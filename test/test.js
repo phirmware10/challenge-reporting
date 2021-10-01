@@ -4,8 +4,8 @@ const jsonist = require('jsonist')
 const port = (process.env.PORT = process.env.PORT || require('get-port-sync')())
 const endpoint = `http://localhost:${port}`
 
-const server = require('./server')
-const StudentModel = require('./model/student')
+const server = require('../server')
+const StudentModel = require('../model/student')
 
 tape('health', async function (t) {
   const url = `${endpoint}/health`

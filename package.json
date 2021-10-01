@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "init-db": "node fetch-db.js",
-    "test": "NODE_ENV=test node test.js",
+    "test": "NODE_ENV=test tape test/*.js && standard",
     "dev": "nodemon server.js"
   },
   "author": "",
@@ -16,6 +16,7 @@
     "express": "^4.17.1",
     "inspector-api": "^1.4.1",
     "knex": "^0.21.21",
+    "sinon": "^11.1.2",
     "sqlite3": "^5.0.2"
   },
   "devDependencies": {

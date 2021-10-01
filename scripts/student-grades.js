@@ -38,18 +38,6 @@ function fetchStudentGrades () {
       }
     })
 
-    stream.on('finish', () => {
-      const average = totalGrade / numberOfGrades
-      const stats = {
-        minimumGrade: minGrade,
-        maxmimumGrade: maxGrade,
-        average
-      }
-      fs.writeFile('./grades/stats.json', JSON.stringify(stats), err => {
-        if (err) throw Error(err)
-      })
-    })
-
     stream.on('end', () => {
       const average = Math.floor(totalGrade / numberOfGrades)
       const stats = {

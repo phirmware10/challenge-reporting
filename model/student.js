@@ -17,5 +17,9 @@ async function findStudent (id) {
 function findStudentTest (id) {
   if (!id) return null
 
-  return studentMocks.find(student => student.id === id)
+  id = typeof id === 'number' ? id : Number(id)
+  const student = studentMocks.find(student => student.id === id)
+
+  // avoid mutation
+  return student ? { ...student } : undefined
 }
