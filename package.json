@@ -6,7 +6,8 @@
   "scripts": {
     "init-db": "node fetch-db.js",
     "test": "NODE_ENV=test tape test/*.js && standard",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js",
   },
   "author": "",
   "license": "ISC",
